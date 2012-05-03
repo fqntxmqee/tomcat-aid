@@ -14,6 +14,8 @@ import javax.naming.OperationNotSupportedException;
 import javax.naming.directory.Attributes;
 
 import org.apache.catalina.Loader;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.naming.NamingEntry;
 import org.apache.naming.resources.FileDirContext;
 import org.apache.tomcat.util.file.Matcher;
@@ -27,10 +29,12 @@ import org.apache.tomcat.util.file.Matcher;
  */
 public class JarFileDirContext extends FileDirContext {
 
+	protected Log						log					= LogFactory.getLog(getClass());
+
 	// 默认从jar包中搜索的资源文件后缀
 	private final static String	defaultPatterns	= "/css/*|/images/*|/jsp/*|/js/*";
 
-	private final static String	RESOURCES	= "resources/";
+	private final static String	RESOURCES			= "resources/";
 
 	// 切割字符串scanJarFileSuffix的分割符
 	private String						delimiters			= "|,;";
@@ -186,7 +190,16 @@ public class JarFileDirContext extends FileDirContext {
 			}
 			Enumeration<URL> reses = classLoader.getResources(_res);
 			if (reses.hasMoreElements()) {
-				return reses.nextElement();
+				URL result = reses.nextElement();
+				boolean repeat = true;
+				while (reses.hasMoreElements()) {
+					if (repeat) {
+						repeat = false;
+						log.info("jar重复文件(" + _res + ")：" + result);
+					}
+					log.info("jar重复文件(" + _res + ")：" + reses.nextElement());
+				}
+				return result;
 			}
 			return null;
 		} catch (IOException e) {
