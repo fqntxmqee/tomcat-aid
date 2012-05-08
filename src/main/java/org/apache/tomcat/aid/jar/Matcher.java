@@ -35,7 +35,7 @@ public final class Matcher {
 	/**
 	 * The string resources for this package.
 	 */
-	private static final StringManager	sm						= StringManager.getManager("org.apache.naming.resources.jar");
+	private static final StringManager	sm						= StringManager.getManager("org.apache.tomcat.aid.jar");
 
 	private static final Log				log					= LogFactory.getLog(Matcher.class);
 
