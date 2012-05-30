@@ -14,7 +14,7 @@ import javax.naming.NamingException;
 import javax.naming.OperationNotSupportedException;
 import javax.naming.directory.Attributes;
 
-import org.apache.catalina.Loader;
+import org.apache.catalina.Container;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.naming.NamingContextEnumeration;
@@ -34,9 +34,11 @@ public class JarFileDirContext extends FileDirContext {
 	protected Log						log					= LogFactory.getLog(getClass());
 
 	// 默认从jar包中搜索的资源文件后缀
-	private final static String	defaultPatterns	= "/css/*|/images/*|/jsp/*|/js/*";
+	private final static String	defaultPatterns	= "/css/*|/images/*|/jsp/*|/js/*|/web-resources/*";
 
-	private final static String	RESOURCES			= "resources/";
+	private final static String	CLASSES_DIR			= "/WEB-INF/classes";
+
+	private final static String	RESOURCES			= "/web-resources";
 
 	// 切割字符串scanJarFileSuffix的分割符
 	private String						delimiters			= "|,;";
@@ -44,7 +46,7 @@ public class JarFileDirContext extends FileDirContext {
 	// 需要从jar包中加载资源的pattern集合
 	private List<String>				patterns				= null;
 
-	private Loader						loader				= null;
+	private Container					container			= null;
 
 	private ClassLoader				classLoader			= null;
 
@@ -55,19 +57,15 @@ public class JarFileDirContext extends FileDirContext {
 		patterns = new ArrayList<String>(Arrays.asList(arr));
 	}
 
-	public JarFileDirContext(Loader loader,
+	public JarFileDirContext(Container container,
 				String scanJarFileSuffix,
 				String pattern,
 				boolean useResources) {
 		this();
-		this.setLoader(loader);
+		this.container = container;
 		this.setScanJarFileSuffix(scanJarFileSuffix);
 		this.setAddPattern(pattern);
 		this.setUseResources(useResources);
-	}
-
-	public synchronized void setLoader(Loader loader) {
-		this.loader = loader;
 	}
 
 	/**
@@ -177,23 +175,26 @@ public class JarFileDirContext extends FileDirContext {
 	 */
 	protected URL getURLResource(String res) {
 		try {
-			if (!scanJarFilechecked(res)) {
+			if (res.startsWith(CLASSES_DIR)) {
 				return null;
 			}
 			String _res = res;
+			if (useResources) {
+				_res = RESOURCES + _res;
+			}
+			if (!scanJarFilechecked(_res)) {
+				return null;
+			}
 			if (_res.startsWith("/")) {
 				_res = res.substring(1);
 			}
 			if (classLoader == null) {
-				if (loader != null) {
-					classLoader = loader.getClassLoader();
+				if (container.getLoader() != null) {
+					classLoader = container.getLoader().getClassLoader();
 				}
 				if (classLoader == null) {
 					return null;
 				}
-			}
-			if (useResources) {
-				_res = RESOURCES + _res;
 			}
 			Enumeration<URL> reses = classLoader.getResources(_res);
 			if (reses.hasMoreElements()) {
@@ -202,7 +203,7 @@ public class JarFileDirContext extends FileDirContext {
 				while (reses.hasMoreElements()) {
 					if (repeat) {
 						repeat = false;
-						log.info("jar重复文件(" + _res + ")：" + result);
+						log.info("(" + _res + ")：" + result);
 					}
 					log.info("jar重复文件(" + _res + ")：" + reses.nextElement());
 				}

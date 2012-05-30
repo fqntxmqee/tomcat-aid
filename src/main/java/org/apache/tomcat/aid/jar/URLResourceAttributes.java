@@ -1,5 +1,6 @@
 package org.apache.tomcat.aid.jar;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 
@@ -72,7 +73,11 @@ public class URLResourceAttributes extends ResourceAttributes {
 		if (lastModified != -1L) {
 			return lastModified;
 		}
-		lastModified = 0L;
+		try {
+			lastModified = url.openConnection().getLastModified();
+		} catch (IOException e) {
+			return super.getLastModified();
+		}
 		return lastModified;
 	}
 

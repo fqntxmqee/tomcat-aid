@@ -39,12 +39,13 @@ public class SupportLoadJarFileContextListener implements LifecycleListener {
 	/* (non-Javadoc)
 	 * @see org.apache.catalina.LifecycleListener#lifecycleEvent(org.apache.catalina.LifecycleEvent)
 	 */
+	@Override
 	public void lifecycleEvent(LifecycleEvent event) {
 		if (Lifecycle.BEFORE_START_EVENT == event.getType()) {
 			Lifecycle context = event.getLifecycle();
 			if (context instanceof StandardContext) {
 				StandardContext standardContext = (StandardContext) context;
-				DirContext resources = new JarFileDirContext(standardContext.getLoader(), scanJarFileSuffix, pattern, useResources);
+				DirContext resources = new JarFileDirContext(standardContext, scanJarFileSuffix, pattern, useResources);
 				standardContext.setResources(resources);
 			}
 		}
