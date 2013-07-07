@@ -1,4 +1,4 @@
 tomcat-aid
 ==========
 
-对tomcat进行一些扩展，提供一些便捷功能。
+Make it successfully loading jar package including jsp, js, css, image, and also make it supporting fragment config of web.xml-tomcat 7.
